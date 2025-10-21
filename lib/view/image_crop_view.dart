@@ -1,5 +1,7 @@
-import 'package:file_picker/file_picker.dart';
+import 'package:crop_image/utils.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../model/image_crop_model.dart';
 import '../controller/image_crop_controller.dart';
 
@@ -84,22 +86,34 @@ class _ImageCropViewState extends State<ImageCropView> {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: DragTarget<PlatformFile>(
-                onAcceptWithDetails: (file) =>
-                    widget.controller.loadImageFromFile(file.data),
-                builder: (context, candidateData, rejectedData) {
-                  return Center(
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                        Icon(Icons.cloud_upload,
-                            size: 64, color: Colors.grey.shade600),
-                        const SizedBox(height: 16),
-                        Text('拖拽图片到这里',
-                            style: TextStyle(
-                                fontSize: 18, color: Colors.grey.shade700))
-                      ]));
-                })));
+            child: DropTarget(
+                onDragDone: (detail) async {
+                  final file = detail.files.first;
+                  final filePath = file.path;
+                  final isImage = GetUtils.isImage(filePath);
+                  if (isImage) {
+                    final formatFile = await file.toPlatformFile();
+                    widget.controller.loadImageFromFile(formatFile);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("不支持的图片格式"),
+                      backgroundColor: Colors.red,
+                    ));
+                  }
+                },
+                onDragEntered: (detail) {},
+                onDragExited: (detail) {},
+                child: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                      Icon(Icons.cloud_upload,
+                          size: 64, color: Colors.grey.shade600),
+                      const SizedBox(height: 16),
+                      Text('拖拽图片到这里',
+                          style: TextStyle(
+                              fontSize: 18, color: Colors.grey.shade700))
+                    ])))));
   }
 
   Widget _buildActionButtons() {
@@ -137,6 +151,7 @@ class _ImageCropViewState extends State<ImageCropView> {
                 onChanged: (value) {
                   setState(() {
                     widget.controller.model.saveToSameLocation = value ?? false;
+                    widget.controller.model.overwriteOriginal = false;
                   });
                 }),
             const Text('保存到原文件相同位置'),
@@ -148,6 +163,7 @@ class _ImageCropViewState extends State<ImageCropView> {
                 onChanged: (value) {
                   setState(() {
                     widget.controller.model.overwriteOriginal = value ?? false;
+                    widget.controller.model.saveToSameLocation = false;
                   });
                 }),
             const Text('覆盖保存原文件'),

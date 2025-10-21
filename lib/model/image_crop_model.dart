@@ -4,13 +4,14 @@ import 'package:file_picker/file_picker.dart';
 class ImageCropModel {
   Uint8List? imageData;
   String? originalFilePath;
-  bool isProcessing = false;
-  bool onlyResize = false;
   String name = "";
+
+  bool isProcessing = false;
 
   // 保存选项
   bool saveToSameLocation = false;
   bool overwriteOriginal = false;
+  bool onlyResize = false;
 
   // 更新图片数据
   void updateImageData(PlatformFile file) {
@@ -18,7 +19,7 @@ class ImageCropModel {
     if (file.bytes != null) {
       imageData = file.bytes;
       originalFilePath = file.path;
-    } else if (file.path != null) {
+    } else {
       originalFilePath = file.path;
     }
   }
@@ -27,10 +28,12 @@ class ImageCropModel {
   void clearImageData() {
     imageData = null;
     originalFilePath = null;
+    name = "";
   }
 
   // 更新处理状态
   void setProcessing(bool processing) {
     isProcessing = processing;
+    clearImageData();
   }
 }

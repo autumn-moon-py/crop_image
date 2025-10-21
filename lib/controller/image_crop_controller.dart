@@ -135,7 +135,8 @@ class ImageCropController {
       // 确定保存路径
       String? savePath;
 
-      if (model.saveToSameLocation && model.originalFilePath != null) {
+      if ((model.saveToSameLocation || model.overwriteOriginal) &&
+          model.originalFilePath != null) {
         if (model.overwriteOriginal) {
           // 覆盖原文件
           savePath = model.originalFilePath;
