@@ -133,42 +133,41 @@ class ImageCropController {
       final fileData = await resizeImage(data);
 
       // 确定保存路径
-      String? savePath;
+      String savePath = "";
 
-      if ((model.saveToSameLocation || model.overwriteOriginal) &&
-          model.originalFilePath != null) {
-        if (model.overwriteOriginal) {
-          // 覆盖原文件
-          savePath = model.originalFilePath;
-        } else {
-          // 相同位置，新文件名
-          String dir = path.dirname(model.originalFilePath!);
-          String name = path.basenameWithoutExtension(model.originalFilePath!);
-          String ext = path.extension(model.originalFilePath!);
-          savePath = path.join(dir, '${name}_cropped$ext');
-        }
-      } else {
-        // 让用户选择保存位置
+      // 相同位置，新文件名
+      if (model.saveToSameLocation) {
+        String dir = path.dirname(model.originalFilePath);
+        String name = path.basenameWithoutExtension(model.originalFilePath);
+        String ext = path.extension(model.originalFilePath);
+        savePath = path.join(dir, '${name}_cropped$ext');
+      }
+
+      // 覆盖原文件
+      if (model.overwriteOriginal) {
+        savePath = model.originalFilePath;
+      }
+
+      // 让用户选择保存位置
+      if (savePath.isEmpty) {
         String? outputPath = await FilePicker.platform.saveFile(
           dialogTitle: '保存裁剪后的图片',
           fileName: '${model.name}_crop.png',
         );
-        savePath = outputPath;
+        savePath = outputPath ?? "";
       }
 
       // 保存文件
-      if (savePath != null) {
-        File outputFile = File(savePath);
-        await outputFile.writeAsBytes(fileData.toList());
+      File outputFile = File(savePath);
+      await outputFile.writeAsBytes(fileData.toList());
 
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('图片已保存到: $savePath'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('图片已保存到: $savePath'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -188,5 +187,6 @@ class ImageCropController {
   // 清除图片
   void clearImage() {
     model.clearImageData();
+    callback?.call();
   }
 }

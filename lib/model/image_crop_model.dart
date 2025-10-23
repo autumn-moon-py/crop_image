@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 
 class ImageCropModel {
   Uint8List? imageData;
-  String? originalFilePath;
+  String originalFilePath = "";
   String name = "";
 
   bool isProcessing = false;
@@ -18,22 +18,19 @@ class ImageCropModel {
     name = file.name;
     if (file.bytes != null) {
       imageData = file.bytes;
-      originalFilePath = file.path;
+      originalFilePath = file.path ?? "";
     } else {
-      originalFilePath = file.path;
+      originalFilePath = file.path ?? "";
     }
   }
 
   // 清除图片数据
   void clearImageData() {
     imageData = null;
-    originalFilePath = null;
-    name = "";
   }
 
   // 更新处理状态
   void setProcessing(bool processing) {
     isProcessing = processing;
-    clearImageData();
   }
 }
