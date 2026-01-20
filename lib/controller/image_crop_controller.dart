@@ -139,13 +139,13 @@ class ImageCropController {
       if (model.saveToSameLocation) {
         String dir = path.dirname(model.originalFilePath);
         String name = path.basenameWithoutExtension(model.originalFilePath);
-        String ext = path.extension(model.originalFilePath);
-        savePath = path.join(dir, '${name}_cropped$ext');
+        savePath = path.join(dir, '${name}_cropped.png');
       }
 
-      // 覆盖原文件
       if (model.overwriteOriginal) {
-        savePath = model.originalFilePath;
+        String dir = path.dirname(model.originalFilePath);
+        String name = path.basenameWithoutExtension(model.originalFilePath);
+        savePath = path.join(dir, '$name.png');
       }
 
       // 让用户选择保存位置
