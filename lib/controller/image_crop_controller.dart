@@ -102,8 +102,7 @@ class ImageCropController {
 
   Future<Uint8List> resizeImage(
     Uint8List imageData, {
-    int width = 300,
-    int height = 300,
+    int size = 300,
   }) async {
     try {
       // 解码图片
@@ -114,8 +113,8 @@ class ImageCropController {
 
       final resizedImage = img.copyResize(
         image,
-        width: width,
-        height: height,
+        width: size,
+        height: size,
         interpolation: img.Interpolation.cubic,
       );
 
