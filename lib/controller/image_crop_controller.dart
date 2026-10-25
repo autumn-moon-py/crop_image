@@ -103,6 +103,7 @@ class ImageCropController {
   Future<Uint8List> resizeImage(
     Uint8List imageData, {
     int size = 300,
+    String ext = '.png',
   }) async {
     try {
       // 解码图片
@@ -118,10 +119,43 @@ class ImageCropController {
         interpolation: img.Interpolation.cubic,
       );
 
-      return Uint8List.fromList(img.encodePng(resizedImage));
+      return Uint8List.fromList(_encodeImage(resizedImage, ext));
     } catch (e) {
       throw Exception('图片缩放失败: $e');
     }
+  }
+
+  // 按目标扩展名编码，避免覆盖 jpg 等格式后文件内容仍是 png
+  List<int> _encodeImage(img.Image image, String ext) {
+    switch (ext) {
+      case '.jpg':
+      case '.jpeg':
+        return img.encodeJpg(image);
+      case '.bmp':
+        return img.encodeBmp(image);
+      case '.gif':
+        return img.encodeGif(image);
+      case '.tif':
+      case '.tiff':
+        return img.encodeTiff(image);
+      default:
+        return img.encodePng(image);
+    }
+  }
+
+  // image 包不支持编码 webp 等格式，这类原图覆盖时退回 png
+  String _outputExtension(String originalPath) {
+    const supported = [
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.bmp',
+      '.gif',
+      '.tif',
+      '.tiff',
+    ];
+    final ext = path.extension(originalPath).toLowerCase();
+    return supported.contains(ext) ? ext : '.png';
   }
 
   // 导出图片
@@ -129,10 +163,10 @@ class ImageCropController {
     final context = Get.context!;
 
     try {
-      final fileData = await resizeImage(data);
-
       // 确定保存路径
       String savePath = "";
+      // 输出扩展名，覆盖时与原文件保持一致
+      String ext = '.png';
 
       // 相同位置，新文件名
       if (model.saveToSameLocation) {
@@ -144,7 +178,8 @@ class ImageCropController {
       if (model.overwriteOriginal) {
         String dir = path.dirname(model.originalFilePath);
         String name = path.basenameWithoutExtension(model.originalFilePath);
-        savePath = path.join(dir, '$name.png');
+        ext = _outputExtension(model.originalFilePath);
+        savePath = path.join(dir, '$name$ext');
       }
 
       // 让用户选择保存位置
@@ -154,9 +189,13 @@ class ImageCropController {
           fileName: '${model.name}_crop.png',
         );
         savePath = outputPath ?? "";
+        if (savePath.isNotEmpty) {
+          ext = _outputExtension(savePath);
+        }
       }
 
       // 保存文件
+      final fileData = await resizeImage(data, ext: ext);
       File outputFile = File(savePath);
       await outputFile.writeAsBytes(fileData.toList());
 
